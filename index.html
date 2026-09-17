@@ -1,1 +1,2808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N4 Kanji Matching Game</title>
 
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7R9BVC2FSX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7R9BVC2FSX');
+</script>
+    
+    <meta name="theme-color" content="#58cc02">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
+    <style>
+:root {
+    --bg-color: #f7f9fa;
+    --text-color: #3c3c3c;
+    --primary-color: #58cc02;
+    --primary-shadow: #46a302;
+    --secondary-color: #1cb0f6;
+    --secondary-shadow: #1899d6;
+    --danger-color: #ff4b4b;
+    --danger-shadow: #ea2b2b;
+    --warning-color: #ffc800;
+    --warning-shadow: #d7a800;
+    --tile-bg: #ffffff;
+    --tile-border: #e5e5e5;
+    --tile-shadow: #e5e5e5;
+    --tile-hover-bg: #ddf4ff;
+    --tile-hover-border: #84d8ff;
+    --tile-selected-bg: #ddf4ff;
+    --tile-selected-border: #1cb0f6;
+    --tile-selected-text: #1cb0f6;
+    --font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+[data-theme="dark"] {
+    --bg-color: #131f24;
+    --text-color: #e5e5e5;
+    --tile-bg: #202f36;
+    --tile-border: #37464f;
+    --tile-shadow: #182328;
+    --tile-hover-bg: #2c424d;
+    --tile-hover-border: #4a6877;
+    --tile-selected-bg: rgba(28, 176, 246, 0.15);
+    --tile-selected-border: #1cb0f6;
+    --tile-selected-text: #32c4ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.global-header {
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+}
+
+.main-title {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.sub-title {
+    font-size: 1.2rem;
+    opacity: 0.7;
+    margin-bottom: 0;
+    font-weight: normal;
+}
+
+.theme-toggle-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: transparent;
+    border: 2px solid var(--tile-border);
+    color: var(--text-color);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--tile-hover-bg);
+}
+
+.theme-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+#icon-sun { display: none; }
+#icon-moon { display: block; }
+
+[data-theme="dark"] #icon-sun { display: block; }
+[data-theme="dark"] #icon-moon { display: none; }
+
+
+/* =========================
+   SOUND TOGGLE BUTTON
+   ========================= */
+
+.sound-toggle-btn {
+    position: absolute;
+    top: 47px;
+    right: 0;
+    background: transparent;
+    border: 2px solid var(--tile-border);
+    color: var(--text-color);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sound-toggle-btn:hover {
+    background: var(--tile-hover-bg);
+}
+
+.sound-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Sound ON */
+#icon-sound-on {
+    display: block;
+}
+
+#icon-sound-off {
+    display: none;
+}
+
+/* Sound OFF */
+.sound-off #icon-sound-on {
+    display: none;
+}
+
+.sound-off #icon-sound-off {
+    display: block;
+}
+
+
+/* ========================= */
+
+#app {
+    width: 100%;
+    max-width: 600px;
+    background: var(--tile-bg);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: background-color 0.3s;
+}
+
+.screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.screen.active {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+p {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    opacity: 0.8;
+    text-align: center;
+}
+
+.menu-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.small-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 2px solid var(--tile-border);
+    background: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.small-btn:active {
+    background: var(--tile-hover-bg);
+    transform: translateY(2px);
+}
+
+fieldset {
+    border: none;
+    min-width: 0;
+}
+
+#lesson-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    width: 100%;
+    max-height: 45vh;
+    overflow-y: auto;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 2px solid var(--tile-border);
+    border-radius: 16px;
+    background: var(--tile-bg);
+}
+
+.lesson-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 2px solid var(--tile-border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.lesson-checkbox:hover {
+    background: var(--tile-hover-bg);
+}
+
+.lesson-checkbox.selected {
+    background: var(--tile-selected-bg);
+    border-color: var(--tile-selected-border);
+    color: var(--tile-selected-text);
+    font-weight: bold;
+}
+
+.lesson-checkbox input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.lesson-checkbox:has(input:focus-visible) {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+button.primary-btn {
+    font-family: var(--font-family);
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.1s;
+    width: 100%;
+    max-width: 300px;
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 0 var(--primary-shadow);
+}
+
+button.primary-btn:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 var(--primary-shadow);
+}
+
+button.primary-btn:disabled {
+    background-color: var(--tile-border);
+    color: #888;
+    box-shadow: 0 4px 0 var(--tile-shadow);
+    cursor: not-allowed;
+}
+
+#back-btn {
+    background: transparent;
+    color: var(--text-color);
+    border: 2px solid var(--tile-border);
+    box-shadow: 0 2px 0 var(--tile-shadow);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#back-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 var(--tile-shadow);
+}
+
+.header {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.progress-bar-container {
+    flex-grow: 1;
+    height: 16px;
+    background: var(--tile-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#progress-bar {
+    height: 100%;
+    background: var(--primary-color);
+    width: 0%;
+    transition: width 0.3s ease, background-color 0.3s;
+}
+
+#progress-bar.review-mode {
+    background: var(--warning-color);
+}
+
+#score {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    min-width: 60px;
+    text-align: right;
+}
+
+#game-board {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    width: 100%;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 50%;
+}
+
+.tile {
+    font-family: "UD Digi Kyokasho NK", sans-serif;
+    background: var(--tile-bg);
+    color: var(--text-color);
+    border: 2px solid var(--tile-border);
+    border-bottom-width: 4px;
+    border-radius: 16px;
+    padding: 10px;
+    text-align: center;
+    font-size: clamp(1.8rem, 3vw + 0.5rem, 2.2rem);
+    font-weight: normal;
+    cursor: pointer;
+    transition: all 0.1s, opacity 0.3s, transform 0.3s;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 85px;
+    word-break: break-word;
+    touch-action: manipulation;
+}
+
+.tile ruby {
+    ruby-align: center;
+}
+
+.tile rt {
+    font-size: 0.6em;
+    color: #888;
+    font-weight: normal;
+    line-height: 1.2;
+}
+
+.tile .bn {
+    font-family: "Noto Sans Bengali", "Nirmala UI", "Vrinda", sans-serif;
+    font-size: 0.50em;
+    line-height: 1.5;
+    font-weight: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+    text-rendering: optimizeLegibility;
+}
+
+.tile .kana {
+    font-family: "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
+    font-size: 0.80em;
+    line-height: 1.3;
+    margin-top: 4px;
+    color: var(--text-color);
+    font-weight: normal;
+}
+
+.tile:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.tile:active:not(.disabled) {
+    transform: translateY(2px) scale(0.98);
+    border-bottom-width: 2px;
+}
+
+.tile.selected {
+    background: var(--tile-selected-bg);
+    border-color: var(--tile-selected-border);
+    color: var(--tile-selected-text);
+}
+
+.tile.matched {
+    background: var(--primary-color);
+    border-color: var(--primary-shadow);
+    color: white;
+    opacity: 0.6;
+    transform: scale(0.98);
+    pointer-events: none;
+}
+
+.tile.matched * {
+    color: white !important;
+}
+
+.tile.wrong {
+    background: rgba(255, 75, 75, 0.15);
+    border-color: var(--danger-shadow);
+    color: var(--danger-color);
+    animation: shake 0.4s;
+}
+
+.tile.disabled {
+    pointer-events: none;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    50% {
+        transform: translateX(5px);
+    }
+
+    75% {
+        transform: translateX(-5px);
+    }
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+    width: 100%;
+}
+
+.stat-box {
+    background: var(--tile-bg);
+    border: 2px solid var(--tile-border);
+    border-radius: 16px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-box h4 {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.stat-box p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.stat-box.high-score p {
+    color: var(--warning-shadow);
+}
+
+footer {
+    margin-top: 30px;
+    font-size: 0.95rem;
+    opacity: 0.6;
+    text-align: center;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    background: var(--tile-bg);
+    padding: 24px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 12px;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-cancel {
+    background: transparent;
+    color: var(--text-color);
+    border: 2px solid var(--tile-border) !important;
+}
+
+.btn-confirm {
+    background: var(--danger-color);
+    color: white;
+    box-shadow: 0 4px 0 var(--danger-shadow);
+}
+
+.btn-confirm:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 var(--danger-shadow);
+}
+
+.btn-review {
+    background: var(--warning-color);
+    color: white;
+    box-shadow: 0 4px 0 var(--warning-shadow);
+}
+
+.btn-review:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 var(--warning-shadow);
+}
+
+.whatsapp-btn {
+    display: block;
+    width: fit-content;
+    margin: 20px auto;
+    padding: 12px 22px;
+    background: #58cc02;
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.whatsapp-btn:hover {
+    opacity: 0.9;
+}
+
+    </style>
+</head>
+
+<body>
+
+    <header class="global-header">
+
+        <h1 class="main-title">N4 Kanji Game</h1>
+
+        <p class="sub-title">
+            Developed by: Rakib Hasan Khan
+        </p>
+
+        <!-- Dark / Light Button -->
+        <button id="theme-toggle"
+                class="theme-toggle-btn"
+                aria-label="Toggle Theme">
+
+            <svg id="icon-sun"
+                 xmlns="http://www.w3.org/2000/svg"
+                 viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+
+            <svg id="icon-moon"
+                 xmlns="http://www.w3.org/2000/svg"
+                 viewBox="0 0 24 24">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+
+        </button>
+
+
+        <!-- Sound ON / OFF Button -->
+        <button id="sound-toggle"
+                class="sound-toggle-btn"
+                aria-label="Toggle Sound">
+
+            <!-- Sound ON -->
+            <svg id="icon-sound-on"
+                 xmlns="http://www.w3.org/2000/svg"
+                 viewBox="0 0 24 24">
+
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+
+                <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+
+                <path d="M19 5a9 9 0 0 1 0 14"></path>
+
+            </svg>
+
+
+            <!-- Sound OFF -->
+            <svg id="icon-sound-off"
+                 xmlns="http://www.w3.org/2000/svg"
+                 viewBox="0 0 24 24">
+
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+
+            </svg>
+
+        </button>
+
+    </header>
+
+
+    <div id="app">
+
+        <div id="a11y-announcer"
+             class="sr-only"
+             aria-live="polite">
+        </div>
+
+
+        <div id="menu-screen" class="screen active">
+
+            <p>Select lessons to practice:</p>
+
+            <div class="menu-controls">
+
+                <button id="select-all-btn"
+                        class="small-btn">
+                    Select All
+                </button>
+
+                <button id="clear-all-btn"
+                        class="small-btn">
+                    Clear
+                </button>
+
+            </div>
+
+
+            <fieldset id="lesson-selector">
+
+                <legend class="sr-only">
+                    Select Lessons
+                </legend>
+
+            </fieldset>
+
+
+            <button id="start-btn"
+                    class="primary-btn"
+                    disabled>
+                Start Practice
+            </button>
+
+        </div>
+
+
+        <div id="game-screen" class="screen">
+
+            <div class="header">
+
+                <button id="back-btn">
+                    Exit
+                </button>
+
+                <div class="progress-bar-container">
+
+                    <div id="progress-bar"></div>
+
+                </div>
+
+                <div id="score">
+                    0 / 0
+                </div>
+
+            </div>
+
+
+            <div id="game-board">
+
+                <div id="left-column"
+                     class="column">
+                </div>
+
+                <div id="right-column"
+                     class="column">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div id="result-screen" class="screen">
+
+            <h2 id="result-title">
+                Lesson Complete!
+            </h2>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-box">
+
+                    <h4>
+                        Mistakes
+                    </h4>
+
+                    <p id="mistake-count">
+                        0
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box">
+
+                    <h4>
+                        Time
+                    </h4>
+
+                    <p id="time-taken">
+                        00:00
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box high-score">
+
+                    <h4>
+                        Best Mistakes
+                    </h4>
+
+                    <p id="best-mistakes">
+                        --
+                    </p>
+
+                </div>
+
+
+                <div class="stat-box high-score">
+
+                    <h4>
+                        Best Time
+                    </h4>
+
+                    <p id="best-time">
+                        --:--
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button id="play-again-btn"
+                    class="primary-btn">
+                Play Again
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- Quit Modal -->
+
+    <div id="quit-modal"
+         class="modal-overlay">
+
+        <div class="modal">
+
+            <h3 style="margin-bottom: 10px; font-size: 1.5rem; color: var(--text-color);">
+                Quit Session?
+            </h3>
+
+            <p style="color: var(--text-color);">
+                Your progress will be lost.
+            </p>
+
+            <div class="modal-actions">
+
+                <button id="modal-cancel-btn"
+                        class="btn-cancel">
+                    Cancel
+                </button>
+
+                <button id="modal-confirm-btn"
+                        class="btn-confirm">
+                    Quit
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Review Modal -->
+
+    <div id="review-modal"
+         class="modal-overlay">
+
+        <div class="modal">
+
+            <h3 style="margin-bottom: 10px; font-size: 1.5rem; color: var(--warning-shadow);">
+                Review Weak Words
+            </h3>
+
+            <p style="color: var(--text-color);">
+                You made some mistakes. Let's practice those words again to lock them in!
+            </p>
+
+            <div class="modal-actions">
+
+                <button id="skip-review-btn"
+                        class="btn-cancel">
+                    Skip
+                </button>
+
+                <button id="start-review-btn"
+                        class="btn-review">
+                    Review Now
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- <footer style="margin-bottom: 20px;">Conact Whatsapp: 01999-923275</footer> -->
+
+
+    <script src="vocab.js"></script>
+
+
+    <script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+
+        /* ==========================================
+           DARK / LIGHT MODE
+           ========================================== */
+
+        const themeBtn =
+            document.getElementById('theme-toggle');
+
+        if (themeBtn) {
+
+            themeBtn.addEventListener('click', () => {
+
+                const isDark =
+                    document.documentElement.hasAttribute('data-theme');
+
+                if (isDark) {
+
+                    document.documentElement.removeAttribute('data-theme');
+
+                    localStorage.setItem(
+                        'theme',
+                        'light'
+                    );
+
+                } else {
+
+                    document.documentElement.setAttribute(
+                        'data-theme',
+                        'dark'
+                    );
+
+                    localStorage.setItem(
+                        'theme',
+                        'dark'
+                    );
+
+                }
+
+            });
+
+        }
+
+
+        /* ==========================================
+           SOUND ON / OFF
+           ========================================== */
+
+        const soundBtn =
+            document.getElementById('sound-toggle');
+
+
+        /*
+         * Default = ON
+         *
+         * যদি আগে OFF করা থাকে তাহলে OFF থাকবে।
+         */
+        let soundEnabled =
+            localStorage.getItem('soundEnabled') !== 'false';
+
+
+        /*
+         * Audio variables
+         * এগুলো নিচে playAudio() function-এ ব্যবহার হবে।
+         */
+        let availableVoices = [];
+
+        let currentFallbackAudio = null;
+
+
+        /*
+         * Page load-এর সময় Sound OFF থাকলে
+         * body-তে sound-off class যোগ হবে।
+         */
+        if (!soundEnabled) {
+
+            document.body.classList.add('sound-off');
+
+        }
+
+
+        /*
+         * Sound button click
+         */
+        if (soundBtn) {
+
+            soundBtn.addEventListener('click', () => {
+
+
+                /* ON → OFF / OFF → ON */
+
+                soundEnabled = !soundEnabled;
+
+
+                if (soundEnabled) {
+
+
+                    /* =========================
+                       SOUND ON
+                       ========================= */
+
+                    document.body.classList.remove(
+                        'sound-off'
+                    );
+
+                    localStorage.setItem(
+                        'soundEnabled',
+                        'true'
+                    );
+
+
+                } else {
+
+
+                    /* =========================
+                       SOUND OFF
+                       ========================= */
+
+                    document.body.classList.add(
+                        'sound-off'
+                    );
+
+                    localStorage.setItem(
+                        'soundEnabled',
+                        'false'
+                    );
+
+
+                    /*
+                     * যদি Speech Synthesis চলতে থাকে,
+                     * সেটা বন্ধ করবে।
+                     */
+
+                    if ('speechSynthesis' in window) {
+
+                        window.speechSynthesis.cancel();
+
+                    }
+
+
+                    /*
+                     * যদি Google TTS fallback audio
+                     * চলতে থাকে, সেটাও বন্ধ করবে।
+                     */
+
+                    if (currentFallbackAudio) {
+
+                        currentFallbackAudio.pause();
+
+                        currentFallbackAudio.currentTime = 0;
+
+                    }
+
+                }
+
+            });
+
+        }
+
+
+        /* ==========================================
+           GAME SCREENS
+           ========================================== */
+
+        const screens = {
+
+            menu: document.getElementById(
+                'menu-screen'
+            ),
+
+            game: document.getElementById(
+                'game-screen'
+            ),
+
+            result: document.getElementById(
+                'result-screen'
+            )
+
+        };
+
+
+        /* ==========================================
+           GAME ELEMENTS
+           ========================================== */
+
+        const elements = {
+
+            lessonSelector:
+                document.getElementById(
+                    'lesson-selector'
+                ),
+
+            startBtn:
+                document.getElementById(
+                    'start-btn'
+                ),
+
+            backBtn:
+                document.getElementById(
+                    'back-btn'
+                ),
+
+            playAgainBtn:
+                document.getElementById(
+                    'play-again-btn'
+                ),
+
+            progressBar:
+                document.getElementById(
+                    'progress-bar'
+                ),
+
+            scoreDisplay:
+                document.getElementById(
+                    'score'
+                ),
+
+            mistakeCount:
+                document.getElementById(
+                    'mistake-count'
+                ),
+
+            timeTaken:
+                document.getElementById(
+                    'time-taken'
+                ),
+
+            bestMistakes:
+                document.getElementById(
+                    'best-mistakes'
+                ),
+
+            bestTime:
+                document.getElementById(
+                    'best-time'
+                ),
+
+            leftCol:
+                document.getElementById(
+                    'left-column'
+                ),
+
+            rightCol:
+                document.getElementById(
+                    'right-column'
+                ),
+
+            selectAllBtn:
+                document.getElementById(
+                    'select-all-btn'
+                ),
+
+            clearAllBtn:
+                document.getElementById(
+                    'clear-all-btn'
+                ),
+
+            resultTitle:
+                document.getElementById(
+                    'result-title'
+                )
+
+        };
+
+
+        /* ==========================================
+           MODALS
+           ========================================== */
+
+        const modals = {
+
+            quit:
+                document.getElementById(
+                    'quit-modal'
+                ),
+
+            review:
+                document.getElementById(
+                    'review-modal'
+                )
+
+        };
+
+
+        /* ==========================================
+           GAME STATE
+           ========================================== */
+
+        let state = {
+
+            selectedLessons: new Set(),
+
+            currentPool: [],
+
+            originalPool: [],
+
+            weakWords: new Set(),
+
+            totalPairs: 0,
+
+            matchedPairs: 0,
+
+            mistakes: 0,
+
+            selectedTile: null,
+
+            startTime: 0,
+
+            poolIndex: 0,
+
+            isReviewMode: false
+
+        };
+
+
+        /* ==========================================
+           JAPANESE VOICES
+           ========================================== */
+
+        if ('speechSynthesis' in window) {
+
+            window.speechSynthesis.onvoiceschanged = () => {
+
+                availableVoices =
+                    window.speechSynthesis.getVoices();
+
+            };
+
+
+            availableVoices =
+                window.speechSynthesis.getVoices();
+
+        }
+
+
+        /* ==========================================
+           START MENU
+           ========================================== */
+
+        initMenu();
+
+
+        /* ==========================================
+           ACCESSIBILITY ANNOUNCER
+           ========================================== */
+
+        function announce(message) {
+
+            const announcer =
+                document.getElementById(
+                    'a11y-announcer'
+                );
+
+            if (announcer) {
+
+                announcer.textContent =
+                    message;
+
+            }
+
+        }
+
+
+        /* ==========================================
+           INIT MENU
+           ========================================== */
+
+        function initMenu() {
+
+            if (!elements.lessonSelector) return;
+
+
+            const availableLessons =
+                Object.keys(vocabData)
+                    .map(Number)
+                    .sort((a, b) => a - b);
+
+
+            availableLessons.forEach(
+                lessonNum => {
+
+
+                    const label =
+                        document.createElement(
+                            'label'
+                        );
+
+                    label.className =
+                        'lesson-checkbox';
+
+
+                    const checkbox =
+                        document.createElement(
+                            'input'
+                        );
+
+                    checkbox.type =
+                        'checkbox';
+
+                    checkbox.value =
+                        lessonNum;
+
+
+                    checkbox.addEventListener(
+                        'change',
+                        (e) => {
+
+                            if (e.target.checked) {
+
+                                state.selectedLessons.add(
+                                    lessonNum
+                                );
+
+                                label.classList.add(
+                                    'selected'
+                                );
+
+                            } else {
+
+                                state.selectedLessons.delete(
+                                    lessonNum
+                                );
+
+                                label.classList.remove(
+                                    'selected'
+                                );
+
+                            }
+
+
+                            elements.startBtn.disabled =
+                                state.selectedLessons.size === 0;
+
+                        }
+                    );
+
+
+                    label.appendChild(
+                        checkbox
+                    );
+
+
+                    label.appendChild(
+                        document.createTextNode(
+                            `Lesson ${lessonNum}`
+                        )
+                    );
+
+
+                    elements.lessonSelector.appendChild(
+                        label
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* ==========================================
+           SELECT ALL
+           ========================================== */
+
+        if (elements.selectAllBtn) {
+
+            elements.selectAllBtn.addEventListener(
+                'click',
+                () => {
+
+                    document
+                        .querySelectorAll(
+                            '.lesson-checkbox input'
+                        )
+                        .forEach(cb => {
+
+                            if (!cb.checked) {
+
+                                cb.checked = true;
+
+                                cb.dispatchEvent(
+                                    new Event('change')
+                                );
+
+                            }
+
+                        });
+
+                }
+            );
+
+        }
+
+
+        /* ==========================================
+           CLEAR ALL
+           ========================================== */
+
+        if (elements.clearAllBtn) {
+
+            elements.clearAllBtn.addEventListener(
+                'click',
+                () => {
+
+                    document
+                        .querySelectorAll(
+                            '.lesson-checkbox input'
+                        )
+                        .forEach(cb => {
+
+                            if (cb.checked) {
+
+                                cb.checked = false;
+
+                                cb.dispatchEvent(
+                                    new Event('change')
+                                );
+
+                            }
+
+                        });
+
+                }
+            );
+
+        }
+
+
+        /* ==========================================
+           SHOW SCREEN
+           ========================================== */
+
+        function showScreen(screenName) {
+
+            Object.values(screens)
+                .forEach(s => {
+
+                    if (s) {
+                        s.classList.remove(
+                            'active'
+                        );
+                    }
+
+                });
+
+
+            if (screens[screenName]) {
+
+                screens[screenName].classList.add(
+                    'active'
+                );
+
+            }
+
+        }
+
+
+        /* ==========================================
+           SHUFFLE ARRAY
+           ========================================== */
+
+        function shuffleArray(array) {
+
+            for (
+                let i = array.length - 1;
+                i > 0;
+                i--
+            ) {
+
+                const j =
+                    Math.floor(
+                        Math.random() * (i + 1)
+                    );
+
+
+                [
+                    array[i],
+                    array[j]
+                ] =
+                [
+                    array[j],
+                    array[i]
+                ];
+
+            }
+
+            return array;
+
+        }
+
+
+        /* ==========================================
+           START GAME
+           ========================================== */
+
+        function startGame(isReview = false) {
+
+            state.isReviewMode =
+                isReview;
+
+
+            if (!isReview) {
+
+
+                state.originalPool = [];
+
+                let globalId = 0;
+
+
+                state.selectedLessons.forEach(
+                    lessonNum => {
+
+
+                        if (vocabData[lessonNum]) {
+
+
+                            vocabData[lessonNum]
+                                .forEach(item => {
+
+
+                                    state.originalPool.push({
+
+                                        id: globalId++,
+
+                                        ja:
+                                            item.ja.trim(),
+
+                                        kana:
+                                            item.kana
+                                                ? item.kana.trim()
+                                                : null,
+
+                                        bn:
+                                            item.bn
+                                                ? item.bn.trim()
+                                                : null,
+
+                                        en:
+                                            item.en.trim()
+
+                                    });
+
+                                });
+
+                        }
+
+                    }
+                );
+
+
+                const uniqueSet =
+                    new Set();
+
+
+                state.originalPool =
+                    state.originalPool.filter(
+                        item => {
+
+
+                            const key =
+                                item.ja +
+                                '|' +
+                                item.en;
+
+
+                            if (
+                                uniqueSet.has(key)
+                            ) {
+
+                                return false;
+
+                            }
+
+
+                            uniqueSet.add(key);
+
+                            return true;
+
+                        }
+                    );
+
+
+                state.currentPool =
+                    [...state.originalPool];
+
+
+                state.weakWords.clear();
+
+                state.mistakes = 0;
+
+                elements.progressBar
+                    .classList
+                    .remove(
+                        'review-mode'
+                    );
+
+
+            } else {
+
+
+                state.currentPool =
+                    Array.from(
+                        state.weakWords
+                    )
+                    .map(
+                        id =>
+                            state.originalPool.find(
+                                p =>
+                                    p.id === id
+                            )
+                    );
+
+
+                state.weakWords.clear();
+
+
+                elements.progressBar
+                    .classList
+                    .add(
+                        'review-mode'
+                    );
+
+            }
+
+
+            shuffleArray(
+                state.currentPool
+            );
+
+
+            state.totalPairs =
+                state.currentPool.length;
+
+
+            state.matchedPairs =
+                0;
+
+
+            state.poolIndex =
+                0;
+
+
+            state.startTime =
+                Date.now();
+
+
+            updateProgress();
+
+            initBoard();
+
+            showScreen('game');
+
+            announce(
+                "Game started. Find the matching pairs."
+            );
+
+        }
+
+
+        /* ==========================================
+           INIT BOARD
+           ========================================== */
+
+        function initBoard() {
+
+            elements.leftCol.innerHTML = '';
+
+            elements.rightCol.innerHTML = '';
+
+            state.selectedTile = null;
+
+
+            const batchSize = 6;
+
+
+            for (
+                let i = 0;
+                i < batchSize &&
+                state.poolIndex <
+                state.totalPairs;
+                i++
+            ) {
+
+                addPairToBoard();
+
+            }
+
+
+            shuffleColumn(
+                elements.leftCol
+            );
+
+            shuffleColumn(
+                elements.rightCol
+            );
+
+        }
+
+
+        /* ==========================================
+           ADD PAIR
+           ========================================== */
+
+        function addPairToBoard() {
+
+            if (
+                state.poolIndex >=
+                state.totalPairs
+            ) return;
+
+
+            const pair =
+                state.currentPool[
+                    state.poolIndex
+                ];
+
+
+            state.poolIndex++;
+
+
+            const jaTile =
+                createTile(
+                    pair,
+                    'ja'
+                );
+
+
+            const enTile =
+                createTile(
+                    pair,
+                    'en'
+                );
+
+
+            insertRandomly(
+                elements.leftCol,
+                jaTile
+            );
+
+
+            insertRandomly(
+                elements.rightCol,
+                enTile
+            );
+
+        }
+
+
+        /* ==========================================
+           INSERT RANDOMLY
+           ========================================== */
+
+        function insertRandomly(
+            container,
+            element
+        ) {
+
+            const children =
+                container.children;
+
+
+            if (
+                children.length === 0
+            ) {
+
+                container.appendChild(
+                    element
+                );
+
+            } else {
+
+
+                const r =
+                    Math.floor(
+                        Math.random() *
+                        (children.length + 1)
+                    );
+
+
+                if (
+                    r === children.length
+                ) {
+
+                    container.appendChild(
+                        element
+                    );
+
+                } else {
+
+                    container.insertBefore(
+                        element,
+                        children[r]
+                    );
+
+                }
+
+            }
+
+
+            element.style.opacity =
+                '0';
+
+            element.style.transform =
+                'scale(0.8)';
+
+
+            void element.offsetWidth;
+
+
+            setTimeout(() => {
+
+                element.style.opacity =
+                    '1';
+
+                element.style.transform =
+                    'scale(1)';
+
+            }, 10);
+
+        }
+
+
+        /* ==========================================
+           SHUFFLE COLUMN
+           ========================================== */
+
+        function shuffleColumn(
+            container
+        ) {
+
+            const els =
+                Array.from(
+                    container.children
+                );
+
+
+            shuffleArray(els);
+
+
+            els.forEach(
+                el =>
+                    container.appendChild(
+                        el
+                    )
+            );
+
+        }
+
+
+        /* ==========================================
+           CREATE TILE
+           ========================================== */
+
+        function createTile(
+            pair,
+            type
+        ) {
+
+            const tile =
+                document.createElement(
+                    'button'
+                );
+
+
+            tile.className =
+                'tile';
+
+
+            tile.dataset.type =
+                type;
+
+
+            tile.dataset.id =
+                pair.id;
+
+
+            if (type === 'ja') {
+
+
+                tile.dataset.spokenText =
+                    pair.kana
+                        ? pair.kana
+                        : pair.ja;
+
+
+                if (pair.kana) {
+
+                    tile.innerHTML =
+                        `<ruby>${pair.ja}<rt>${pair.kana}</rt></ruby>`;
+
+                } else {
+
+                    tile.textContent =
+                        pair.ja;
+
+                }
+
+
+            } else {
+
+
+                if (pair.bn) {
+
+
+                    tile.innerHTML = `
+                        <span class="bn">
+                            ${pair.bn}
+                        </span>
+
+                        <span class="kana">
+                            ${pair.en}
+                        </span>
+                    `;
+
+
+                } else {
+
+
+                    tile.textContent =
+                        pair.en;
+
+                }
+
+            }
+
+
+            tile.addEventListener(
+                'click',
+                () =>
+                    handleTileClick(tile)
+            );
+
+
+            return tile;
+
+        }
+
+
+        /* ==========================================
+           PLAY AUDIO
+           ========================================== */
+
+        function playAudio(text) {
+
+
+            /*
+             * IMPORTANT:
+             * Sound OFF হলে এখান থেকে
+             * কোনো audio play হবে না।
+             */
+
+            if (!soundEnabled) {
+
+                return;
+
+            }
+
+
+            /* ==============================
+               1. Get available voices
+               ============================== */
+
+            let voices =
+                window.speechSynthesis.getVoices();
+
+
+            if (voices.length === 0) {
+
+                voices =
+                    availableVoices;
+
+            }
+
+
+            /* ==============================
+               2. Native Japanese TTS
+               ============================== */
+
+            if (
+                'speechSynthesis' in window &&
+                voices.length > 0
+            ) {
+
+
+                const jaVoice =
+                    voices.find(
+                        voice =>
+
+                            voice.lang
+                                .toLowerCase() ===
+                            'ja-jp'
+
+                            ||
+
+                            voice.lang
+                                .toLowerCase() ===
+                            'ja_jp'
+
+                            ||
+
+                            voice.lang
+                                .toLowerCase()
+                                .startsWith('ja')
+                    );
+
+
+                if (jaVoice) {
+
+
+                    window.speechSynthesis.cancel();
+
+
+                    const utterance =
+                        new SpeechSynthesisUtterance(
+                            text
+                        );
+
+
+                    utterance.voice =
+                        jaVoice;
+
+
+                    utterance.lang =
+                        jaVoice.lang;
+
+
+                    utterance.rate =
+                        1.0;
+
+
+                    window.utteranceInstance =
+                        utterance;
+
+
+                    window.speechSynthesis.speak(
+                        utterance
+                    );
+
+
+                    return;
+
+                }
+
+            }
+
+
+            /* ==============================
+               3. Google Translate fallback
+               ============================== */
+
+            try {
+
+
+                if (currentFallbackAudio) {
+
+                    currentFallbackAudio.pause();
+
+                    currentFallbackAudio.currentTime =
+                        0;
+
+                }
+
+
+                const url =
+                    `https://translate.google.com/translate_tts?ie=UTF-8&tl=ja&client=tw-ob&q=${encodeURIComponent(text)}`;
+
+
+                currentFallbackAudio =
+                    new Audio(url);
+
+
+                currentFallbackAudio
+                    .play()
+                    .catch(e => {
+
+                        console.warn(
+                            'Fallback audio playback failed.',
+                            e
+                        );
+
+                    });
+
+
+            } catch(e) {
+
+
+                console.warn(
+                    'Error constructing fallback audio.',
+                    e
+                );
+
+            }
+
+        }
+
+
+        /* ==========================================
+           HANDLE TILE CLICK
+           ========================================== */
+
+        function handleTileClick(tile) {
+
+
+            if (
+                tile.classList.contains(
+                    'matched'
+                ) ||
+
+                tile.disabled ||
+
+                tile === state.selectedTile
+            ) {
+
+
+                if (
+                    tile ===
+                    state.selectedTile
+                ) {
+
+
+                    tile.classList.remove(
+                        'selected'
+                    );
+
+
+                    state.selectedTile =
+                        null;
+
+
+                    announce(
+                        "Deselected"
+                    );
+
+                }
+
+
+                return;
+
+            }
+
+
+            /*
+             * Japanese tile click করলে
+             * pronunciation হবে।
+             *
+             * Sound OFF থাকলে playAudio()
+             * নিজে থেকেই return করবে।
+             */
+
+            if (
+                tile.dataset.type ===
+                'ja'
+            ) {
+
+                playAudio(
+                    tile.dataset.spokenText
+                );
+
+            }
+
+
+            if (!state.selectedTile) {
+
+
+                tile.classList.add(
+                    'selected'
+                );
+
+
+                state.selectedTile =
+                    tile;
+
+
+                announce(
+                    `Selected ${tile.textContent}`
+                );
+
+
+                return;
+
+            }
+
+
+            const t1 =
+                state.selectedTile;
+
+
+            const t2 =
+                tile;
+
+
+            if (
+                t1.dataset.type ===
+                t2.dataset.type
+            ) {
+
+
+                t1.classList.remove(
+                    'selected'
+                );
+
+
+                t2.classList.add(
+                    'selected'
+                );
+
+
+                state.selectedTile =
+                    t2;
+
+
+                announce(
+                    `Selected ${tile.textContent}`
+                );
+
+
+                return;
+
+            }
+
+
+            t1.classList.remove(
+                'selected'
+            );
+
+
+            state.selectedTile =
+                null;
+
+
+            const allTiles =
+                document.querySelectorAll(
+                    '.tile'
+                );
+
+
+            allTiles.forEach(
+                t =>
+                    t.classList.add(
+                        'disabled'
+                    )
+            );
+
+
+            /* ==============================
+               CORRECT MATCH
+               ============================== */
+
+            if (
+                t1.dataset.id ===
+                t2.dataset.id
+            ) {
+
+
+                t1.classList.add(
+                    'matched'
+                );
+
+
+                t2.classList.add(
+                    'matched'
+                );
+
+
+                t1.disabled = true;
+
+                t2.disabled = true;
+
+
+                state.matchedPairs++;
+
+
+                updateProgress();
+
+
+                announce(
+                    "Correct match!"
+                );
+
+
+                const unmatchedTiles =
+                    document.querySelectorAll(
+                        '.tile:not(.matched)'
+                    );
+
+
+                setTimeout(() => {
+
+
+                    unmatchedTiles.forEach(
+                        t =>
+                            t.classList.remove(
+                                'disabled'
+                            )
+                    );
+
+
+                    if (
+                        state.matchedPairs >=
+                        state.totalPairs
+                    ) {
+
+
+                        handlePhaseComplete();
+
+
+                    } else if (
+                        unmatchedTiles.length ===
+                        0
+                    ) {
+
+
+                        initBoard();
+
+                    }
+
+
+                }, 500);
+
+
+            } else {
+
+
+                /* ==========================
+                   WRONG MATCH
+                   ========================== */
+
+                if (
+                    !state.isReviewMode
+                ) {
+
+
+                    state.mistakes++;
+
+
+                    state.weakWords.add(
+                        parseInt(
+                            t1.dataset.id
+                        )
+                    );
+
+                }
+
+
+                t1.classList.add(
+                    'wrong'
+                );
+
+
+                t2.classList.add(
+                    'wrong'
+                );
+
+
+                announce(
+                    "Incorrect match"
+                );
+
+
+                setTimeout(() => {
+
+
+                    t1.classList.remove(
+                        'wrong'
+                    );
+
+
+                    t2.classList.remove(
+                        'wrong'
+                    );
+
+
+                    allTiles.forEach(
+                        t => {
+
+                            if (
+                                !t.classList.contains(
+                                    'matched'
+                                )
+                            ) {
+
+                                t.classList.remove(
+                                    'disabled'
+                                );
+
+                            }
+
+                        }
+                    );
+
+
+                }, 500);
+
+            }
+
+        }
+
+
+        /* ==========================================
+           UPDATE PROGRESS
+           ========================================== */
+
+        function updateProgress() {
+
+            elements.progressBar.style.width =
+                `${(state.matchedPairs / state.totalPairs) * 100}%`;
+
+
+            elements.scoreDisplay.textContent =
+                `${state.matchedPairs} / ${state.totalPairs}`;
+
+        }
+
+
+        /* ==========================================
+           PHASE COMPLETE
+           ========================================== */
+
+        function handlePhaseComplete() {
+
+            if (
+                !state.isReviewMode &&
+                state.weakWords.size > 0
+            ) {
+
+                modals.review.classList.add(
+                    'active'
+                );
+
+            } else {
+
+                endGame();
+
+            }
+
+        }
+
+
+        /* ==========================================
+           FORMAT TIME
+           ========================================== */
+
+        function formatTime(ms) {
+
+            const m =
+                Math.floor(
+                    ms / 60000
+                )
+                .toString()
+                .padStart(
+                    2,
+                    '0'
+                );
+
+
+            const s =
+                Math.floor(
+                    (ms % 60000) / 1000
+                )
+                .toString()
+                .padStart(
+                    2,
+                    '0'
+                );
+
+
+            return `${m}:${s}`;
+
+        }
+
+
+        /* ==========================================
+           END GAME
+           ========================================== */
+
+        function endGame() {
+
+
+            const timeTakenMs =
+                Date.now() -
+                state.startTime;
+
+
+            elements.mistakeCount.textContent =
+                state.mistakes;
+
+
+            elements.timeTaken.textContent =
+                formatTime(
+                    timeTakenMs
+                );
+
+
+            elements.resultTitle.textContent =
+                state.isReviewMode
+                    ? "Review Complete!"
+                    : "Lesson Complete!";
+
+
+            if (!state.isReviewMode) {
+
+
+                const saveKey =
+                    'n5_stats_' +
+                    Array.from(
+                        state.selectedLessons
+                    )
+                    .sort()
+                    .join('-');
+
+
+                const prevStats =
+                    JSON.parse(
+                        localStorage.getItem(
+                            saveKey
+                        )
+                    );
+
+
+                let bestM =
+                    state.mistakes;
+
+
+                let bestT =
+                    timeTakenMs;
+
+
+                if (prevStats) {
+
+
+                    bestM =
+                        Math.min(
+                            state.mistakes,
+                            prevStats.mistakes
+                        );
+
+
+                    bestT =
+                        Math.min(
+                            timeTakenMs,
+                            prevStats.timeMs
+                        );
+
+                }
+
+
+                localStorage.setItem(
+                    saveKey,
+                    JSON.stringify({
+                        mistakes:
+                            bestM,
+                        timeMs:
+                            bestT
+                    })
+                );
+
+
+                elements.bestMistakes.textContent =
+                    bestM;
+
+
+                elements.bestTime.textContent =
+                    formatTime(
+                        bestT
+                    );
+
+            }
+
+
+            showScreen(
+                'result'
+            );
+
+
+            announce(
+                "Lesson Complete."
+            );
+
+        }
+
+
+        /* ==========================================
+           BUTTON EVENTS
+           ========================================== */
+
+        if (elements.startBtn) {
+
+            elements.startBtn.addEventListener(
+                'click',
+                () =>
+                    startGame(false)
+            );
+
+        }
+
+
+        if (elements.backBtn) {
+
+            elements.backBtn.addEventListener(
+                'click',
+                () =>
+                    modals.quit.classList.add(
+                        'active'
+                    )
+            );
+
+        }
+
+
+        if (elements.playAgainBtn) {
+
+            elements.playAgainBtn.addEventListener(
+                'click',
+                () =>
+                    showScreen('menu')
+            );
+
+        }
+
+
+        /* ==========================================
+           MODAL BUTTONS
+           ========================================== */
+
+        const modalCancelBtn =
+            document.getElementById(
+                'modal-cancel-btn'
+            );
+
+
+        const modalConfirmBtn =
+            document.getElementById(
+                'modal-confirm-btn'
+            );
+
+
+        const startReviewBtn =
+            document.getElementById(
+                'start-review-btn'
+            );
+
+
+        const skipReviewBtn =
+            document.getElementById(
+                'skip-review-btn'
+            );
+
+
+        if (modalCancelBtn) {
+
+            modalCancelBtn.addEventListener(
+                'click',
+                () =>
+                    modals.quit.classList.remove(
+                        'active'
+                    )
+            );
+
+        }
+
+
+        if (modalConfirmBtn) {
+
+            modalConfirmBtn.addEventListener(
+                'click',
+                () => {
+
+                    modals.quit.classList.remove(
+                        'active'
+                    );
+
+                    showScreen(
+                        'menu'
+                    );
+
+                }
+            );
+
+        }
+
+
+        if (startReviewBtn) {
+
+            startReviewBtn.addEventListener(
+                'click',
+                () => {
+
+                    modals.review.classList.remove(
+                        'active'
+                    );
+
+                    startGame(true);
+
+                }
+            );
+
+        }
+
+
+        if (skipReviewBtn) {
+
+            skipReviewBtn.addEventListener(
+                'click',
+                () => {
+
+                    modals.review.classList.remove(
+                        'active'
+                    );
+
+                    endGame();
+
+                }
+            );
+
+        }
+
+
+    });
+
+    </script>
+
+
+    <a href="https://wa.me/8801999923275"
+       target="_blank"
+       class="whatsapp-btn">
+
+        💬 WhatsApp Rakib Hasan Khan
+
+    </a>
+
+</body>
+</html>
